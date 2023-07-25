@@ -47,7 +47,7 @@ def query2(conn, doc):
     print(f'\n{doc["query2"]["description"]}')
     res = conn.execute(doc["query2"]["query"])
     tuple_result = res.fetchall()[0]
-    print(f"\nTEH FARTHEST FANS IS: {tuple_result[0]} {tuple_result[1]} AT {tuple_result[2]} MILES AWAY FROM FORD FIELD.\n")
+    print(f"\nTHE FARTHEST FAN IS: {tuple_result[0]} {tuple_result[1]} AT {tuple_result[2]} MILES AWAY FROM FORD FIELD.\n")
 
 def query3(conn, doc):
     print(f'\n{doc["query3"]["description"]}')
