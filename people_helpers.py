@@ -2,7 +2,6 @@ import requests
 import haversine as hs
 import logging
 import pandas as pd
-from db_helpers import create_connection, create_table
 
 logging.basicConfig(level=logging.INFO, format='%(levelname)s:%(message)s')
 logger = logging.getLogger('logger')
