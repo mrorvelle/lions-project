@@ -1,74 +1,41 @@
-import requests
-import logging
-import sqlite3
-import pandas as pd
+from db_helpers import create_age_table, create_connection
+from people_helpers import retrieve_people_data
+from sqlite3 import OperationalError
 
+"""
+To begin, we must extract data form the RandomUser API. Once extracted, we supplement the data in 2 ways:
 
-def create_connection(db_file):
-    """ create a database connection to the SQLite database
-        specified by db_file
-    :param db_file: database file
-    :return: Connection object or None
-    """
-    conn = None
-    try:
-        conn = sqlite3.connect(db_file)
-        return conn
-    except Exception as e:
-        print(e)
+1) We use the Agify.io API to predict a person's age based on their first name. 
+    NOTE: If we already know a person's predicted age from a previous API call, we will NOT re-call 
+    the API to save time and (theoretical) money.
+2) We use haversine package to calculate the distance of each person's latitude and longitude from Ford Field in miles.
+    NOTE: Unfortunately, the latitude and longitude values from RandomUser do not correspond to the person's listed 
+    address it provides, so haversine produces unusual results often.
 
-    return conn
+"""
 
-def create_table(conn, create_table_sql):
-    """ create a table from the create_table_sql statement
-    :param conn: Connection object
-    :param create_table_sql: a CREATE TABLE statement
-    :return:
-    """
-    try:
-        c = conn.cursor()
-        c.execute(create_table_sql)
-    except Exception as e:
-        print(e)
-
-def predict_age(name, cur):
-    print(name)
-    response = requests.get(f'https://api.agify.io?name={name}')
-    res = cur.execute(f"SELECT age FROM name where name = {name}")
-    print(res.fetchone())
-    if len(res) > 0:
-        logger.info(f'Age already predicted for {name}. Returning previous result to limit API calls.')
-        return res.fetchone()
-    else:
-        return response.json()['age']
-
-logging.basicConfig(level=logging.INFO, format='%(levelname)s:%(message)s')
-logger = logging.getLogger('logger')
-
-logger.info(f"Logger instantiated. Beginning query of RandomUser")
-
-num_of_people = 10
-people = pd.json_normalize(requests.get(f'https://randomuser.me/api/?results={num_of_people}').json()['results'])
-people['predicted_age'] = ''
-# flatten produce . delimited headers. change to _ for standardization
-people.columns = people.columns.str.replace(".", "_")
+### Produce and/or append to two tables: people and names ###
+num_of_people = 200
 
 conn = create_connection('db.sqlite')
+people = retrieve_people_data(num_of_people, conn)
+create_age_table(conn)
 
-# Get predicted ages
-create_table_sql = """ CREATE TABLE names AS 
-name text PRIMARY KEY, 
-age integer
+
 """
-create_table(conn, create_table_sql)
-for i in people.index:
-    people.at[i, 'predicted_age'] = predict_age(people.at[i,'name_first'], conn)
+Now, let's analyze some of our data using SQL. We have a file (sql_queries.sql) that contains our queries.
+As we cycle through these queries, we will print a description of the query being run, and insights/results gathered.
 
+"""
 
-# now we need to store people results in DB
+# Open and read the file and then split by ; delimiter
+fd = open('sql_queries.sql', 'r')
+sqlFile = fd.read()
+fd.close()
+commands = sqlFile.split(';')
 
-people.to_sql('people',conn,if_exists='replace',index=False)
+# Query 1
+res = conn.execute(commands[0])
+res.fetchall()
 
-# predict income by zip code by going through each line and if United States, running below, otherwise returning unknown
-#pd.json_normalize()
-
+conn.close()
