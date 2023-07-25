@@ -1,7 +1,8 @@
 import requests
 import logging
-import json
 import sqlite3
+import pandas as pd
+
 
 def create_connection(db_file):
     """ create a database connection to the SQLite database
@@ -30,36 +31,32 @@ def create_table(conn, create_table_sql):
     except Exception as e:
         print(e)
 
+def predict_age(name):
+    print(name)
+    response = requests.get(f'https://api.agify.io?name={name}')
+    print(response.json())
+    return response.json()['age']
+
 logging.basicConfig(level=logging.INFO, format='%(levelname)s:%(message)s')
 logger = logging.getLogger('logger')
 
 logger.info(f"Logger instantiated. Beginning query of RandomUser")
 
-num_of_people = 1
-people = requests.get(f'https://randomuser.me/api/?results={num_of_people}').json()['results']
+num_of_people = 10
+people = pd.json_normalize(requests.get(f'https://randomuser.me/api/?results={num_of_people}').json()['results'])
+people['predicted_age'] = ''
+# flatten produce . delimited headers. change to _ for standardization
+people.columns = people.columns.str.replace(".", "_")
+
+# Get distance from detroit
+for i in people.index:
+    people.at[i, 'predicted_age'] = predict_age(people.at[i,'name_first'])
 
 
-
+# now we need to store people results in DB
 conn = create_connection('db.sqlite')
+people.to_sql('people',conn,if_exists='replace',index=False)
 
-if conn is not None:
-        sql_create_projects_table = """ CREATE TABLE IF NOT EXISTS people (
-                                        id text PRIMARY KEY,
-                                        f_name text NOT NULL,
-                                        l_name text NOT NULL,
-                                        title text,
-                                        gender text,
-                                        email text,
-                                        street_number text,
-                                        street_name text,
-                                        city text,
-                                        state text,
-                                        country text,
-                                        zip_code text
-                                    ); """
-        
-        # create projects table
-        create_table(conn, sql_create_projects_table)
+# predict income by zip code by going through each line and if United States, running below, otherwise returning unknown
+#pd.json_normalize()
 
-else:
-    print("Error! cannot create the database connection.")
