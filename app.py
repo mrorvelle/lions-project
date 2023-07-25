@@ -38,4 +38,5 @@ commands = sqlFile.split(';')
 res = conn.execute(commands[0])
 res.fetchall()
 
+
 conn.close()
