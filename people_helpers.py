@@ -7,6 +7,7 @@ from db_helpers import create_connection, create_table
 logging.basicConfig(level=logging.INFO, format='%(levelname)s:%(message)s')
 logger = logging.getLogger('logger')
 db_file = 'db.sqlite'
+
 def predict_age(name_passed, conn):
 
     cur = conn.cursor()
@@ -15,9 +16,9 @@ def predict_age(name_passed, conn):
         return res[0]
     else:
         response = requests.get(f'https://api.agify.io?name={name_passed}')
-        if response.json()['age'] is not None:
+        if response.json().get('age') is not None:
             cur.execute(f"INSERT INTO names VALUES (?,?)", (str(name_passed), int(response.json()['age'])))
-        return response.json()['age']
+        return response.json().get('age')
 
 def distance_from_ford_field(lat,long):
     ford_field=(42.3400,83.0456)

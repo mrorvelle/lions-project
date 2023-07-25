@@ -32,3 +32,70 @@ NOTE: If prompted to install additional packages, do so by running
 ```
 python3 -m pip install [package_name]
 ```
+
+#### SQL Queries Used
+
+1. This query is used to calculate teh share of foreign fans in the database for international efforts/reporting. Its results will appear very high due to the nature of the fake/random data
+```
+SELECT count_foreign_fans,
+       Round(( count_foreign_fans * 100.0 ) / total_fans, 2) AS PERCENT
+FROM   (SELECT Sum(CASE
+                     WHEN location_country != 'United States' THEN 1
+                     ELSE 0
+                   END)          AS count_foreign_fans,
+               Count(name_first) AS total_fans
+        FROM   people) 
+```
+
+2. This query finds the fan located the most miles from the geographic coordinates of ford field (as determined during an ETL step in python)
+```
+SELECT name_first,
+       name_last,
+       Round(distance_from_ford, 2)
+FROM   people
+ORDER  BY distance_from_ford DESC
+LIMIT  1 
+```
+
+3. This query groups fans into three buckets based on dob_age field from RandomUser API
+```
+SELECT Sum(CASE
+             WHEN dob_age > 70 THEN 1
+             ELSE 0
+           END) AS 'Over 70',
+       Sum(CASE
+             WHEN dob_age < 30 THEN 1
+             ELSE 0
+           END) AS 'Under 30',
+       Sum(CASE
+             WHEN dob_age <= 70
+                  AND dob_age >= 30 THEN 1
+             ELSE 0
+           END) AS 'Between 30-70'
+FROM   people 
+```
+
+4. This query breaks down the Lions fans by gender
+```
+SELECT Sum(CASE
+             WHEN gender = 'male' THEN 1
+             ELSE 0
+           END) AS 'Male',
+       Sum(CASE
+             WHEN gender = 'female' THEN 1
+             ELSE 0
+           END) AS 'Female'
+FROM   people 
+```
+
+5. This query leverages a join to a names table and a sub-query to do a quick DQ check by comparing the predicted vs. actual age of fans
+```
+SELECT Round(Avg(difference), 2) AS diff_avg
+FROM   (SELECT p.name_first,
+               p.dob_age,
+               n.age,
+               Abs(n.age - p.dob_age) AS difference
+        FROM   people p
+               JOIN names n
+                 ON p.name_first = n.NAME) 
+```

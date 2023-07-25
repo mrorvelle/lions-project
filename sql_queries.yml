@@ -1,0 +1,20 @@
+query1:
+  description: You just got a request from the international program of the NFL. They want to know - how many of your fans in your database are from OUTSIDE the united states? They would like a percentage and a count.
+  prompt: ready to start analyzing the data a bit with query 1? (y/n)
+  query: select count_foreign_fans, round((count_foreign_fans*100.0)/total_fans,2) as percent from (select SUM(CASE WHEN location_country!='United States' THEN 1 ELSE 0 END) as count_foreign_fans, count(name_first) as total_fans from people)
+query2:
+  description: You know, it hasn't always been easy to be a Lions fan. That is especially true if you have to wake up at odd hours of the day to watch a game! We would like to reward our fan who is the FARTHEST away from us in a different time zone for their loyalty. Who is that?
+  prompt: Well, now let's dig into a distance question. Ready for query 2? (y/n)
+  query: select name_first, name_last, round(distance_from_ford,2) from people order by distance_from_ford DESC limit 1
+query3:
+  description: Let's get an idea of who are fans are. What are the number of fans in certain age buckets?
+  prompt: Very interesting... now what about query 3? (y/n)
+  query: select sum(case when dob_age > 70 then 1 else 0 END) as 'Over 70', sum(case when dob_age < 30 then 1 else 0 END) as 'Under 30', sum(case when dob_age <= 70 AND dob_age >= 30 then 1 else 0 END) as 'Between 30-70' from people
+query4:
+  description: Interesting age breakdown, but what about gender? Are the Lions making inroads with women, for example?
+  prompt: Good breakdown of age. Ready for query 4? (y/n)
+  query: select sum(case when gender = 'male' then 1 else 0 END) as 'Male', sum(case when gender = 'female' then 1 else 0 END) as 'Female' from people
+query5:
+  description: Our last query deals with joining in Agify data to check for data quality. Are there big differences between the predicted age from Agify and the actual age in RandomUser?
+  prompt: Woo! Time for our last query! Let's go? (y/n)
+  query: select round(avg(difference),2) as diff_avg from (select p.name_first, p.dob_age, n.age, abs(n.age-p.dob_age) as difference from people p join names n on p.name_first = n.name)

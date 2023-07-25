@@ -1,6 +1,7 @@
-from db_helpers import create_age_table, create_connection
+from db_helpers import create_age_table, create_connection, query1, query2, query3, query4, query5
 from people_helpers import retrieve_people_data
-from sqlite3 import OperationalError
+import yaml
+
 
 """
 To begin, we must extract data form the RandomUser API. Once extracted, we supplement the data in 2 ways:
@@ -14,7 +15,7 @@ To begin, we must extract data form the RandomUser API. Once extracted, we suppl
 
 """
 
-### Produce and/or append to two tables: people and names ###
+# Produce and/or append to two tables: people and names
 num_of_people = 200
 
 conn = create_connection('db.sqlite')
@@ -22,21 +23,45 @@ people = retrieve_people_data(num_of_people, conn)
 create_age_table(conn)
 
 
-"""
-Now, let's analyze some of our data using SQL. We have a file (sql_queries.sql) that contains our queries.
-As we cycle through these queries, we will print a description of the query being run, and insights/results gathered.
 
 """
+Now, let's analyze some of our data using SQL. We have a file (sql_queries.yml) that contains our queries.
+As we cycle through these queries, we will print a description of the query being run, and insights/results gathered in terminal.
 
-# Open and read the file and then split by ; delimiter
-fd = open('sql_queries.sql', 'r')
-sqlFile = fd.read()
-fd.close()
-commands = sqlFile.split(';')
+"""
 
-# Query 1
-res = conn.execute(commands[0])
-res.fetchall()
+# Open and read the yml file of queries to pass to our db_helpers
+with open('sql_queries.yml', 'r') as f:
+    doc = yaml.load(f, Loader=yaml.FullLoader)
+
+for i in range(1,6):
+    successful = False
+    while not successful:
+        if input(doc[f'query{i}']['prompt']).lower() in ['y','yes']:
+            if i == 1:
+                query1(conn, doc)
+            elif i ==2:
+                query2(conn, doc)
+            elif i == 3:
+                query3(conn, doc)
+            elif i == 4:
+                query4(conn, doc)
+            elif i == 5:
+                query5(conn, doc)
+            successful = True
+    continue
+
+        
+
+    # Query 2
+    # This query finds the person identified as being the FARTHEST fan away from Ford Field in miles.
+    if input().lower() in ['y','yes']:
+        query2(conn, doc)
+
+    # Query 3
+    # This query groups fans into age buckets based on RandomUser dob_age field
+    if input().lower() in ['y','yes']:
+        query3(conn, doc)
 
 
 conn.close()
