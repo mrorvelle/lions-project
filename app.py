@@ -51,17 +51,6 @@ for i in range(1,6):
             successful = True
     continue
 
-        
-
-    # Query 2
-    # This query finds the person identified as being the FARTHEST fan away from Ford Field in miles.
-    if input().lower() in ['y','yes']:
-        query2(conn, doc)
-
-    # Query 3
-    # This query groups fans into age buckets based on RandomUser dob_age field
-    if input().lower() in ['y','yes']:
-        query3(conn, doc)
 
 
 conn.close()
