@@ -26,7 +26,10 @@ cd lions-project
 python3 -m pip install -r requirements.txt
 ```
 3. Run the application
+```
 python3 app.py
+```
+
 
 NOTE: If prompted to install additional packages, do so by running
 ```
